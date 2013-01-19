@@ -5,6 +5,7 @@ import java.util.HashMap;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -22,6 +23,9 @@ public class SuperEdit extends JavaPlugin implements Listener {
 	public void onEnable() {
 		selections = new HashMap<String, Location[]>();
 		saveDefaultConfig();
+		for(World w : getServer().getWorlds())
+			for(Player p : w.getPlayers())
+				selections.put(p.getName(), new Location[2]);
 		getServer().getPluginManager().registerEvents(this, this);
 	}
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -45,19 +49,26 @@ public class SuperEdit extends JavaPlugin implements Listener {
 	public void onPlayerJoin(PlayerJoinEvent event) {
 		if(selections.containsKey(event.getPlayer().getName()))
 			selections.remove(event.getPlayer().getName());
+		selections.put(event.getPlayer().getName(), new Location[2]);
 	}
 	
 	@EventHandler
 	public void onBlockStrike(BlockDamageEvent event) {
-		if(event.getPlayer().getItemInHand().getTypeId() == getConfig().getInt("utility"))
+		if(event.getPlayer().getItemInHand().getTypeId() == getConfig().getInt("utility")) {
 			setSelCoord(event.getPlayer().getName(), 0, event.getBlock().getLocation());
+			Location loc = event.getBlock().getLocation();
+			event.getPlayer().sendMessage(ChatColor.GOLD + "[SuperEdit] Corner 1 set to {" + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + "}");
+		}
 	}
 	
 	@EventHandler
 	public void onBlockInteract(PlayerInteractEntityEvent event) {
 		if(event.getPlayer().getItemInHand().getTypeId() == getConfig().getInt("utility"))
-			if(event.getRightClicked() instanceof Block) 
+			if(event.getRightClicked() instanceof Block) {
 				setSelCoord(event.getPlayer().getName(), 1, event.getRightClicked().getLocation());
+				Location loc = ((Block)(event.getRightClicked())).getLocation();
+				event.getPlayer().sendMessage(ChatColor.GOLD + "[SuperEdit] Corner 2 set to {" + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + "}");
+			}
 	}
 	
 	private void setSelCoord(String who, int which, Location where) {
