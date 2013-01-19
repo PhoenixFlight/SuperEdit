@@ -49,13 +49,15 @@ public class SuperEdit extends JavaPlugin implements Listener {
 	
 	@EventHandler
 	public void onBlockStrike(BlockDamageEvent event) {
-		setSelCoord(event.getPlayer().getName(), 0, event.getBlock().getLocation());
+		if(event.getPlayer().getItemInHand().getTypeId() == getConfig().getInt("utility"))
+			setSelCoord(event.getPlayer().getName(), 0, event.getBlock().getLocation());
 	}
 	
 	@EventHandler
 	public void onBlockInteract(PlayerInteractEntityEvent event) {
-		if(event.getRightClicked() instanceof Block) 
-			setSelCoord(event.getPlayer().getName(), 1, event.getRightClicked().getLocation());
+		if(event.getPlayer().getItemInHand().getTypeId() == getConfig().getInt("utility"))
+			if(event.getRightClicked() instanceof Block) 
+				setSelCoord(event.getPlayer().getName(), 1, event.getRightClicked().getLocation());
 	}
 	
 	private void setSelCoord(String who, int which, Location where) {
