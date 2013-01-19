@@ -1,0 +1,8 @@
+name: SuperEdit
+main: com.zephyrr.superedit.SuperEdit
+version: 0.0.1
+commands:
+  set:
+    description: Replaces all blocks in the current selection with the given block type.
+    usage: /set <block_type>
+    permission: superedit.set 
