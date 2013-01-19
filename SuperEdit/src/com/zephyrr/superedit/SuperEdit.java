@@ -12,8 +12,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockDamageEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -53,28 +53,24 @@ public class SuperEdit extends JavaPlugin implements Listener {
 	}
 	
 	@EventHandler
-	public void onBlockStrike(BlockDamageEvent event) {
+	public void onBlockInteract(PlayerInteractEvent event) {
+		int which = -1;
+		if(event.getAction() == Action.LEFT_CLICK_BLOCK)
+			which = 0;
+		else if(event.getAction() == Action.RIGHT_CLICK_BLOCK)
+			which = 1;
+		else return;
 		if(event.getPlayer().getItemInHand().getTypeId() == getConfig().getInt("utility")) {
-			setSelCoord(event.getPlayer().getName(), 0, event.getBlock().getLocation());
-			Location loc = event.getBlock().getLocation();
-			event.getPlayer().sendMessage(ChatColor.GOLD + "[SuperEdit] Corner 1 set to {" + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + "}");
+			event.setCancelled(true);
+			setSelCoord(event.getPlayer().getName(), which, event.getClickedBlock().getLocation());
 		}
 	}
 	
-	@EventHandler
-	public void onBlockInteract(PlayerInteractEntityEvent event) {
-		if(event.getPlayer().getItemInHand().getTypeId() == getConfig().getInt("utility"))
-			if(event.getRightClicked() instanceof Block) {
-				setSelCoord(event.getPlayer().getName(), 1, event.getRightClicked().getLocation());
-				Location loc = ((Block)(event.getRightClicked())).getLocation();
-				event.getPlayer().sendMessage(ChatColor.GOLD + "[SuperEdit] Corner 2 set to {" + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + "}");
-			}
-	}
-	
-	private void setSelCoord(String who, int which, Location where) {
+	private void setSelCoord(String who, int which, Location loc) {
 		if(!selections.containsKey(who))
 			selections.put(who, new Location[2]);
-		selections.get(who)[which] = where;
+		selections.get(who)[which] = loc;
+		getServer().getPlayer(who).sendMessage(ChatColor.GOLD + "[SuperEdit] Corner " + (which+1) + " set to {" + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + "}");
 	}
 	
 	private boolean set(CommandSender sender, String[] args) {
@@ -87,7 +83,7 @@ public class SuperEdit extends JavaPlugin implements Listener {
 		}
 		Material mat;
 		try {
-			mat = Material.valueOf(args[0].split(":")[0]);
+			mat = Material.valueOf(args[0].split(":")[0].toUpperCase());
 		} catch(IllegalArgumentException ex) {
 			return false;
 		}
